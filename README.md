@@ -6,9 +6,44 @@ Tested on **M3 Pro, macOS 27.0.1, CrossOver 26.3, NotProton and D3DMetal**. The 
 
 ## Install
 
-1. Close AION 2. Download `compat_cpuid.dylib` from [Releases](../../releases), or build it with `make` (requires Apple Command Line Tools).
-2. Put the library in `~/Library/Application Support/notproton/aion2-compat/`.
-3. Back up `~/Library/Application Support/Steam/compatibilitytools.d/notproton-26.3/run`. In that script, immediately after `export WINEDEBUG="${WINEDEBUG:-err+all,fixme-all}"`, add:
+### 1. Download the library
+
+Close AION 2. Open [Releases](https://github.com/Yuki-fox/aion2-wine-compat/releases/tag/v0.1.0), expand **Assets**, and download **`compat_cpuid.dylib`**. You do not need either of the “Source code” archives.
+
+### 2. Put it in the right folder
+
+Open **Terminal**. If the file is in your Downloads folder, paste:
+
+```sh
+mkdir -p "$HOME/Library/Application Support/notproton/aion2-compat"
+cp "$HOME/Downloads/compat_cpuid.dylib" "$HOME/Library/Application Support/notproton/aion2-compat/compat_cpuid.dylib"
+```
+
+If you saved it elsewhere, change the first path in the `cp` command. The installed filename must be exactly `compat_cpuid.dylib`.
+
+### 3. Allow macOS to load the downloaded library
+
+The release is not notarized by Apple. macOS may quarantine the download and block it when the game starts, with a message such as “Apple could not verify…” or “developer cannot be verified.”
+
+If you downloaded the library from this repository and choose to allow it, run this in Terminal **after copying it**:
+
+```sh
+xattr -d com.apple.quarantine "$HOME/Library/Application Support/notproton/aion2-compat/compat_cpuid.dylib"
+```
+
+This removes the download quarantine flag from **this one library only**. It does not disable Gatekeeper globally and does not need `sudo`. No output means success. **“No such xattr: com.apple.quarantine”** means the flag is already absent; continue. **“No such file”** means the copy/path in step 2 needs fixing.
+
+The `.dylib` is loaded by Wine, not opened by double-clicking. `chmod +x` does not remove a macOS quarantine block. Apple's explanation of these warnings is [here](https://support.apple.com/en-us/102445). Alternatively, build the library locally with `make` (requires Apple Command Line Tools).
+
+### 4. Add it to the NotProton launcher
+
+Back up `~/Library/Application Support/Steam/compatibilitytools.d/notproton-26.3/run`, then open that file in a plain-text/code editor. Find this existing line:
+
+```sh
+export WINEDEBUG="${WINEDEBUG:-err+all,fixme-all}"
+```
+
+Immediately **below it**, add the following block once. This goes in the `run` file, **not** in Steam's Launch Options or Terminal:
 
 ```sh
 # BEGIN AION 2 Rosetta compatibility fix
@@ -18,11 +53,15 @@ fi
 # END AION 2 Rosetta compatibility fix
 ```
 
-Check the edited script, then launch normally from Steam:
+### 5. Check and launch
+
+Save the file, then check it in Terminal:
 
 ```sh
 sh -n "$HOME/Library/Application Support/Steam/compatibilitytools.d/notproton-26.3/run"
 ```
+
+No output means the shell syntax is valid. If it reports an error, fix the edit before continuing. Launch AION 2 with **Play** in Steam as usual.
 
 This preserves the existing overlay injection and applies only to AION 2 (3393110). Other launcher versions may handle injection differently. A NotProton update may overwrite the modification.
 
