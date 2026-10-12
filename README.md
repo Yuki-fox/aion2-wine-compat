@@ -35,37 +35,25 @@ This removes the download quarantine flag from **this one library only**. It doe
 
 The `.dylib` is loaded by Wine, not opened by double-clicking. `chmod +x` does not remove a macOS quarantine block. Apple's explanation of these warnings is [here](https://support.apple.com/en-us/102445). Alternatively, build the library locally with `make` (requires Apple Command Line Tools).
 
-### 4. Add it to the NotProton launcher
+### 4. Set AION 2's Steam Launch Options
 
-Back up `~/Library/Application Support/Steam/compatibilitytools.d/notproton-26.3/run`, then open that file in a plain-text/code editor. Find this existing line:
+**Use Launch Options, not an edit to NotProton's `run` file.** The earlier instructions edited that file, but NotProton can regenerate it when Steam starts and silently remove the fix.
 
-```sh
-export WINEDEBUG="${WINEDEBUG:-err+all,fixme-all}"
-```
-
-Immediately **below it**, add the following block once. This goes in the `run` file, **not** in Steam's Launch Options or Terminal:
+In Steam, right-click **AION 2 → Properties → General → Launch Options**. If the field is empty or contains only `CX_GRAPHICS_BACKEND=d3dmetal %command%`, replace it with this entire line:
 
 ```sh
-# BEGIN AION 2 Rosetta compatibility fix
-if [ "$app_id" = 3393110 ]; then
-  export STEAM_DYLD_INSERT_LIBRARIES="$HOME/Library/Application Support/notproton/aion2-compat/compat_cpuid.dylib${STEAM_DYLD_INSERT_LIBRARIES:+:$STEAM_DYLD_INSERT_LIBRARIES}"
-fi
-# END AION 2 Rosetta compatibility fix
+CX_GRAPHICS_BACKEND=d3dmetal STEAM_DYLD_INSERT_LIBRARIES="$HOME/Library/Application Support/notproton/aion2-compat/compat_cpuid.dylib${STEAM_DYLD_INSERT_LIBRARIES:+:$STEAM_DYLD_INSERT_LIBRARIES}" %command%
 ```
 
-### 5. Check and launch
+Paste it into **Steam's Launch Options**, not Terminal. Keep the quotes, `$` characters and `%command%` exactly as shown. If you have other custom launch options, save them first and merge this assignment before the single `%command%` instead of discarding them.
 
-Save the file, then check it in Terminal:
+If you followed the old instructions, close the game and remove only the AION 2 compatibility block you added to `notproton-26.3/run`, if it is still there. Keep the rest of the file. Do not replace a newer launcher with an old backup.
 
-```sh
-sh -n "$HOME/Library/Application Support/Steam/compatibilitytools.d/notproton-26.3/run"
-```
+### 5. Launch
 
-No output means the shell syntax is valid. If it reports an error, fix the edit before continuing. Launch AION 2 with **Play** in Steam as usual.
+Click **Play** in Steam as usual. The setting belongs to AION 2 and survives regeneration of the NotProton launcher. The existing Steam overlay injection is preserved. This method was checked after fully quitting and reopening Steam with the original, unmodified launcher.
 
-This preserves the existing overlay injection and applies only to AION 2 (3393110). Other launcher versions may handle injection differently. A NotProton update may overwrite the modification.
-
-To undo, close the game and remove only the marked block. No game data needs deleting.
+To undo, close the game and remove the `STEAM_DYLD_INSERT_LIBRARIES="..."` assignment from its Launch Options. For the line above, that leaves `CX_GRAPHICS_BACKEND=d3dmetal %command%`. No game data needs deleting.
 
 ## What it fixes
 
